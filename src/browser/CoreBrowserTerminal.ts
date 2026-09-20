@@ -35,6 +35,7 @@ import { IRenderer } from 'browser/renderer/shared/Types';
 import { CharSizeService } from 'browser/services/CharSizeService';
 import { CharacterJoinerService } from 'browser/services/CharacterJoinerService';
 import { CoreBrowserService } from 'browser/services/CoreBrowserService';
+import { CellColorOverrideStore, ICellColorSpan } from 'browser/services/CellColorOverrideStore';
 import { LinkProviderService } from 'browser/services/LinkProviderService';
 import { MouseService } from 'browser/services/MouseService';
 import { RenderService } from 'browser/services/RenderService';
@@ -951,6 +952,29 @@ export class CoreBrowserTerminal extends CoreTerminal implements ITerminal {
 
   public registerDecoration(decorationOptions: IDecorationOptions): IDecoration | undefined {
     return this._decorationService.registerDecoration(decorationOptions);
+  }
+
+  public readonly cellColorOverrides: CellColorOverrideStore = new CellColorOverrideStore();
+
+  /**
+   * Recolor a contiguous cell range on one absolute buffer line. Pass null to
+   * clear the line. The affected viewport row is re-rendered lazily. Overrides
+   * are keyed by the active buffer's absolute line index; the caller must
+   * clear/re-set them when indices shift (scrollback trim, resize reflow) or
+   * when the alternate buffer changes.
+   */
+  public setCellColorOverrides(lineY: number, spans: ICellColorSpan[] | null): void {
+    if (this.cellColorOverrides.set(lineY, spans)) {
+      const row = lineY - this._bufferService.buffer.ydisp;
+      if (row >= 0 && row < this._bufferService.rows) {
+        this._renderService?.refreshRows(row, row);
+      }
+    }
+  }
+
+  public clearCellColorOverrides(): void {
+    this.cellColorOverrides.clear();
+    this._renderService?.refreshRows(0, this._bufferService.rows - 1);
   }
 
   /**

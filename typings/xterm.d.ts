@@ -613,6 +613,19 @@ declare module '@xterm/xterm' {
   }
 
   /**
+   * A contiguous cell range on one buffer line whose text should be rendered
+   * in a specific color, used with {@link Terminal.setCellColorOverrides}.
+   */
+  export interface ICellColorSpan {
+    /** Zero-based column of the first cell. */
+    col: number;
+    /** Number of cells covered (wide characters count as 2 cells). */
+    width: number;
+    /** CSS color string (#rrggbb, rgb(...), etc.). */
+    color: string;
+  }
+
+  /**
    * The set of localizable strings.
    */
   export interface ILocalizableStrings {
@@ -1155,6 +1168,22 @@ declare module '@xterm/xterm' {
      * @throws when options include a negative x offset.
      */
     registerDecoration(decorationOptions: IDecorationOptions): IDecoration | undefined;
+
+    /**
+     * Recolor a contiguous range of cells on one buffer line by drawing the
+     * covered text in the given color. Pass null for spans to clear the line.
+     * Line indexes are absolute within the active buffer; the caller must
+     * clear/re-set overrides when indexes shift (scrollback trim, resize
+     * reflow) or when the alternate buffer changes.
+     * @param lineY The absolute buffer line index (ydisp-independent).
+     * @param spans The cell ranges and colors to apply, or null to clear.
+     */
+    setCellColorOverrides(lineY: number, spans: ICellColorSpan[] | null): void;
+
+    /**
+     * Clears all cell color overrides set by setCellColorOverrides.
+     */
+    clearCellColorOverrides(): void;
 
     /**
      * Gets whether the terminal has an active selection.

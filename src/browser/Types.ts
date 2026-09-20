@@ -8,6 +8,7 @@ import { IBuffer } from 'common/buffer/Types';
 import { IDisposable, Terminal as ITerminalApi } from '@xterm/xterm';
 import { channels, css } from 'common/Color';
 import type { Event } from 'vs/base/common/event';
+import { CellColorOverrideStore } from 'browser/services/CellColorOverrideStore';
 
 /**
  * A portion of the public API that are implemented identially internally and simply passed through.
@@ -20,6 +21,7 @@ export interface ITerminal extends InternalPassthroughApis, ICoreTerminal {
   buffer: IBuffer;
   linkifier: ILinkifier2 | undefined;
   options: Required<ITerminalOptions>;
+  cellColorOverrides: CellColorOverrideStore;
 
   onBlur: Event<void>;
   onFocus: Event<void>;

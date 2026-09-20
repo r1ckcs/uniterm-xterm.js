@@ -6,6 +6,7 @@
 import jsdom = require('jsdom');
 import { assert } from 'chai';
 import { DomRendererRowFactory } from 'browser/renderer/dom/DomRendererRowFactory';
+import { CellColorOverrideStore } from 'browser/services/CellColorOverrideStore';
 import { NULL_CELL_CODE, NULL_CELL_WIDTH, NULL_CELL_CHAR, DEFAULT_ATTR, FgFlags, BgFlags, Attributes, UnderlineStyle } from 'common/buffer/Constants';
 import { BufferLine, DEFAULT_ATTR_DATA } from 'common/buffer/BufferLine';
 import { IBufferLine } from 'common/Types';
@@ -27,6 +28,7 @@ describe('DomRendererRowFactory', () => {
     dom = new jsdom.JSDOM('');
     rowFactory = new DomRendererRowFactory(
       dom.window.document,
+      new CellColorOverrideStore(),
       new MockCharacterJoinerService(),
       new MockOptionsService({ drawBoldTextInBrightColors: true }),
       new MockCoreBrowserService(),
@@ -77,6 +79,7 @@ describe('DomRendererRowFactory', () => {
       coreBrowserService.isFocused = false;
       const rowFactory = new DomRendererRowFactory(
         dom.window.document,
+        new CellColorOverrideStore(),
         new MockCharacterJoinerService(),
         new MockOptionsService({ drawBoldTextInBrightColors: true }),
         coreBrowserService,
@@ -101,6 +104,7 @@ describe('DomRendererRowFactory', () => {
       coreService.isCursorInitialized = false;
       const rowFactory = new DomRendererRowFactory(
         dom.window.document,
+        new CellColorOverrideStore(),
         new MockCharacterJoinerService(),
         new MockOptionsService(),
         new MockCoreBrowserService(),

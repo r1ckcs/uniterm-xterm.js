@@ -10,6 +10,7 @@ import { CellData } from 'common/buffer/CellData';
 import { ICoreService, IDecorationService, IOptionsService } from 'common/services/Services';
 import { channels, color } from 'common/Color';
 import { ICharacterJoinerService, ICoreBrowserService, IThemeService } from 'browser/services/Services';
+import { CellColorOverrideStore } from 'browser/services/CellColorOverrideStore';
 import { JoinedCellData } from 'browser/services/CharacterJoinerService';
 import { treatGlyphAsBackgroundColor } from 'browser/renderer/shared/RendererUtils';
 import { AttributeData } from 'common/buffer/AttributeData';
@@ -44,6 +45,7 @@ export class DomRendererRowFactory {
 
   constructor(
     private readonly _document: Document,
+    private readonly _colorOverrides: CellColorOverrideStore,
     @ICharacterJoinerService private readonly _characterJoinerService: ICharacterJoinerService,
     @IOptionsService private readonly _optionsService: IOptionsService,
     @ICoreBrowserService private readonly _coreBrowserService: ICoreBrowserService,
@@ -94,6 +96,13 @@ export class DomRendererRowFactory {
     let spacing = 0;
     let skipJoinedCheckUntilX = 0;
     const classes: string[] = [];
+
+    // Cell color overrides for this line (absolute row index). Looked up once
+    // per row, then consumed with a moving pointer since x only advances.
+    const colorOverrideSpans = this._colorOverrides.get(row);
+    let colorOverrideIdx = 0;
+    let colorOverride: IColor | undefined;
+    let oldColorOverride: IColor | undefined;
 
     const hasHover = linkStart !== -1 && linkEnd !== -1;
 
@@ -154,6 +163,21 @@ export class DomRendererRowFactory {
       const isCursorCell = isCursorRow && x === cursorX;
       const isLinkHover = hasHover && x >= linkStart && x <= linkEnd;
 
+      // Resolve the color override covering this cell (if any). Spans are
+      // sorted by column and don't overlap, so a single moving pointer works.
+      if (colorOverrideSpans) {
+        while (
+          colorOverrideIdx < colorOverrideSpans.length &&
+          colorOverrideSpans[colorOverrideIdx].col + colorOverrideSpans[colorOverrideIdx].width <= x
+        ) {
+          colorOverrideIdx++;
+        }
+        const span = colorOverrideSpans[colorOverrideIdx];
+        colorOverride = (span && x >= span.col) ? span.color : undefined;
+      } else {
+        colorOverride = undefined;
+      }
+
       let isDecorated = false;
       this._decorationService.forEachDecorationAtCell(x, row, undefined, d => {
         isDecorated = true;
@@ -194,6 +218,7 @@ export class DomRendererRowFactory {
           && cell.extended.ext === oldExt
           && isLinkHover === oldLinkHover
           && spacing === oldSpacing
+          && colorOverride === oldColorOverride
           && !isCursorCell
           && !isJoined
           && !isDecorated
@@ -228,6 +253,7 @@ export class DomRendererRowFactory {
       oldLinkHover = isLinkHover;
       oldSpacing = spacing;
       oldIsInSelection = isInSelection;
+      oldColorOverride = colorOverride;
 
       if (isJoined) {
         // The DOM renderer colors the background of the cursor but for ligatures all cells are
@@ -417,7 +443,14 @@ export class DomRendererRowFactory {
       }
 
       // Foreground
-      switch (fgColorMode) {
+      if (colorOverride) {
+        // Cell color override: recolor the text directly, winning over the
+        // cell/decoration colors but still running through the minimum
+        // contrast adjustment like every other foreground source.
+        if (!this._applyMinimumContrast(charElement, resolvedBg, colorOverride, cell, bgOverride, colorOverride)) {
+          this._addStyle(charElement, `color:${colorOverride.css}`);
+        }
+      } else switch (fgColorMode) {
         case Attributes.CM_P16:
         case Attributes.CM_P256:
           if (cell.isBold() && fg < 8 && this._optionsService.rawOptions.drawBoldTextInBrightColors) {

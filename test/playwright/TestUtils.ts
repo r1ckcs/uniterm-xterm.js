@@ -10,7 +10,7 @@ import type { IRenderService } from 'browser/services/Services';
 import type { ICoreTerminal, IDisposable, IMarker } from 'common/Types';
 import * as playwright from '@playwright/test';
 import { PageFunction } from 'playwright-core/types/structs';
-import { IBuffer, IBufferCell, IBufferLine, IBufferNamespace, IBufferRange, IDecoration, IDecorationOptions, IModes, ITerminalInitOnlyOptions, ITerminalOptions, Terminal } from '@xterm/xterm';
+import { ICellColorSpan, IBuffer, IBufferCell, IBufferLine, IBufferNamespace, IBufferRange, IDecoration, IDecorationOptions, IModes, ITerminalInitOnlyOptions, ITerminalOptions, Terminal } from '@xterm/xterm';
 
 export interface ITestContext {
   browser: Browser;
@@ -279,6 +279,8 @@ export class TerminalProxy implements ITerminalProxyCustomMethods, PlaywrightApi
   public async resize(cols: number, rows: number): Promise<void> { return this._page.evaluate(([term, cols, rows]) => term.resize(cols, rows), [await this.getHandle(), cols, rows] as const); }
   public async registerMarker(y?: number | undefined): Promise<IMarker> { return this._page.evaluate(([term, y]) => term.registerMarker(y), [await this.getHandle(), y] as const); }
   public async registerDecoration(decorationOptions: IDecorationOptions): Promise<IDecoration | undefined> { return this._page.evaluate(([term, decorationOptions]) => term.registerDecoration(decorationOptions), [await this.getHandle(), decorationOptions] as const); }
+  public setCellColorOverrides(lineY: number, spans: ICellColorSpan[] | null): void { throw new Error('not supported via proxy'); }
+  public async clearCellColorOverrides(): Promise<void> { return this._page.evaluate((term) => term.clearCellColorOverrides(), await this.getHandle()); }
   public async clearTextureAtlas(): Promise<void> { return this.evaluate(([term]) => term.clearTextureAtlas()); }
   // #endregion
 

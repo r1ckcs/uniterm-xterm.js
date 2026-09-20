@@ -3,7 +3,8 @@
  * @license MIT
  */
 
-import { IDisposable, IMarker, ILinkProvider, IDecorationOptions, IDecoration } from '@xterm/xterm';
+import { CellColorOverrideStore } from 'browser/services/CellColorOverrideStore';
+import { ICellColorSpan, IDisposable, IMarker, ILinkProvider, IDecorationOptions, IDecoration } from '@xterm/xterm';
 import { ICharacterJoinerService, ICharSizeService, ICoreBrowserService, IMouseService, IRenderService, ISelectionService, IThemeService } from 'browser/services/Services';
 import { IRenderDimensions, IRenderer, IRequestRedrawEvent } from 'browser/renderer/shared/Types';
 import { IColorSet, ITerminal, ILinkifier2, IBrowser, IViewport, ICompositionHelper, CharacterJoinerHandler, IBufferRange, ReadonlyColorSet, IBufferElementProvider } from 'browser/Types';
@@ -30,6 +31,7 @@ export class TestTerminal extends CoreBrowserTerminal {
 }
 
 export class MockTerminal implements ITerminal {
+  public readonly cellColorOverrides = new CellColorOverrideStore();
   public onBlur!: Event<void>;
   public onFocus!: Event<void>;
   public onA11yChar!: Event<string>;
@@ -107,6 +109,12 @@ export class MockTerminal implements ITerminal {
   }
   public registerLinkProvider(linkProvider: ILinkProvider): IDisposable {
     throw new Error('Method not implemented.');
+  }
+  public setCellColorOverrides(lineY: number, spans: ICellColorSpan[] | null): void {
+    throw new Error('Not implemented');
+  }
+  public clearCellColorOverrides(): void {
+    throw new Error('Not implemented');
   }
   public registerDecoration(decorationOptions: IDecorationOptions): IDecoration | undefined {
     throw new Error('Method not implemented.');

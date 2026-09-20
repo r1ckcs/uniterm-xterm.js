@@ -12,7 +12,7 @@ import { AddonManager } from 'common/public/AddonManager';
 import { BufferNamespaceApi } from 'common/public/BufferNamespaceApi';
 import { ParserApi } from 'common/public/ParserApi';
 import { UnicodeApi } from 'common/public/UnicodeApi';
-import { IBufferNamespace as IBufferNamespaceApi, IDecoration, IDecorationOptions, IDisposable, ILinkProvider, ILocalizableStrings, IMarker, IModes, IParser, ITerminalAddon, Terminal as ITerminalApi, ITerminalInitOnlyOptions, IUnicodeHandling } from '@xterm/xterm';
+import { IBufferNamespace as IBufferNamespaceApi, IDecoration, IDecorationOptions, IDisposable, ILinkProvider, ILocalizableStrings, IMarker, IModes, IParser, ITerminalAddon, Terminal as ITerminalApi, ITerminalInitOnlyOptions, IUnicodeHandling, ICellColorSpan } from '@xterm/xterm';
 import type { Event } from 'vs/base/common/event';
 
 /**
@@ -176,6 +176,13 @@ export class Terminal extends Disposable implements ITerminalApi {
     this._checkProposedApi();
     this._verifyPositiveIntegers(decorationOptions.x ?? 0, decorationOptions.width ?? 0, decorationOptions.height ?? 0);
     return this._core.registerDecoration(decorationOptions);
+  }
+  public setCellColorOverrides(lineY: number, spans: ICellColorSpan[] | null): void {
+    this._verifyIntegers(lineY);
+    this._core.setCellColorOverrides(lineY, spans);
+  }
+  public clearCellColorOverrides(): void {
+    this._core.clearCellColorOverrides();
   }
   public hasSelection(): boolean {
     return this._core.hasSelection();
